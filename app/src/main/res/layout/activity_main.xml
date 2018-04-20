@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+
+    <android.support.constraint.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
+        tools:context=".MainActivity"
+        tools:showIn="@layout/activity_main">
+
+        <LinearLayout
+            android:layout_width="304dp"
+            android:layout_height="361dp"
+            android:layout_marginBottom="32dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="24dp"
+            android:gravity="top|center"
+            android:orientation="vertical"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.506"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="1.0">
+
+            <ToggleButton
+                android:id="@+id/btn_connect"
+                style="@android:style/Widget.Button.Toggle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checked="false"
+                android:textOff="@string/btn_connect_off"
+                android:textOn="@string/btn_connect_on" />
+
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <TableLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="fill_vertical|fill_horizontal"
+                android:visibility="visible"
+                tools:layout_editor_absoluteX="119dp"
+                tools:layout_editor_absoluteY="46dp">
+
+                <TableRow
+                    android:layout_width="80dp"
+                    android:layout_height="match_parent">
+
+                    <Button
+                        android:id="@+id/button1"
+                        style="@android:style/Widget.Button.Inset"
+                        android:layout_width="80dp"
+                        android:layout_height="match_parent"
+                        android:text="@string/btn_up"
+                        tools:layout_editor_absoluteX="148dp"
+                        tools:layout_editor_absoluteY="145dp" />
+
+                    <Button
+                        android:id="@+id/button2"
+                        style="@android:style/Widget.Button.Inset"
+                        android:layout_width="80dp"
+                        android:layout_height="wrap_content"
+                        android:text="@string/btn_down"
+                        tools:layout_editor_absoluteX="148dp"
+                        tools:layout_editor_absoluteY="231dp" />
+
+                </TableRow>
+
+                <TableRow
+                    android:layout_width="80dp"
+                    android:layout_height="match_parent">
+
+                    <Button
+                        android:id="@+id/button3"
+                        style="@android:style/Widget.Button.Inset"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/btn_left" />
+
+                    <Button
+                        android:id="@+id/button4"
+                        style="@android:style/Widget.Button.Inset"
+                        android:layout_width="80dp"
+                        android:layout_height="wrap_content"
+                        android:text="@string/btn_right" />
+                </TableRow>
+
+                <TableRow
+                    android:layout_width="80dp"
+                    android:layout_height="match_parent">
+
+                    <Button
+                        android:id="@+id/button6"
+                        style="@android:style/Widget.Button.Inset"
+                        android:layout_height="wrap_content"
+                        android:text="@string/btn_select"
+                        tools:layout_editor_absoluteX="99dp"
+                        tools:layout_editor_absoluteY="251dp" />
+
+                </TableRow>
+
+            </TableLayout>
+
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <EditText
+                android:id="@+id/messageId"
+                android:layout_width="272dp"
+                android:layout_height="wrap_content"
+                android:ems="10"
+                android:inputType="text"
+                android:text="@string/message_field"
+                tools:layout_editor_absoluteX="84dp"
+                tools:layout_editor_absoluteY="310dp" />
+
+            <Button
+                android:id="@+id/button5"
+                style="@android:style/Widget.Button.Inset"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/btn_send"
+                tools:layout_editor_absoluteX="0dp"
+                tools:layout_editor_absoluteY="379dp" />
+
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <EditText
+                android:id="@+id/infoId"
+                style="@style/Widget.AppCompat.AutoCompleteTextView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ems="10"
+                android:inputType="text"
+                android:text="@string/message_field1"
+                tools:accessibilityLiveRegion="polite" />
+
+        </LinearLayout>
+
+    </android.support.constraint.ConstraintLayout>
+
+    <android.support.design.widget.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:theme="@style/AppTheme.AppBarOverlay">
+
+        <android.support.v7.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="?attr/colorPrimary"
+            app:popupTheme="@style/AppTheme.PopupOverlay" />
+
+    </android.support.design.widget.AppBarLayout>
+
+    <include
+        layout="@layout/content_main"
+        android:layout_height="482dp" />
+
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/fab"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="@dimen/fab_margin"
+        android:visibility="invisible"
+        app:srcCompat="@android:drawable/ic_dialog_email" />
+
+</android.support.design.widget.CoordinatorLayout>

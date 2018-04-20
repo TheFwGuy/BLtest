@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">BL-test</string>
+    <string name="action_settings">Settings</string>
+    <string name="btn_select">Select</string>
+    <string name="btn_up">Up</string>
+    <string name="btn_down">Down</string>
+    <string name="btn_left">Left</string>
+    <string name="btn_right">Right</string>
+    <string name="btn_send">Send</string>
+    <string name="btn_connect">Connect</string>
+    <string name="btn_connect_on">  Connected  </string>
+    <string name="btn_connect_off">Disconnected</string>
+    <string name="message_field">Message</string>
+    <string name="message_field1">Info</string>
+    <string name="label_author">TheFwGuy (c)</string>
+    <string name="label_version">1.0.0</string>
+</resources>
