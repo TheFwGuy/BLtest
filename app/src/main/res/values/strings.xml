@@ -14,4 +14,5 @@
     <string name="message_field1">Info</string>
     <string name="label_author">TheFwGuy (c)</string>
     <string name="label_version">1.0.0</string>
+    <string name="textview">TextView</string>
 </resources>
