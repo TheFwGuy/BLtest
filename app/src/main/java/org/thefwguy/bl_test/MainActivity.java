@@ -6,15 +6,14 @@ import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.ToggleButton;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -28,30 +27,59 @@ public class MainActivity extends AppCompatActivity {
     BluetoothDevice mmDevice;
     OutputStream mmOutputStream;
     InputStream mmInputStream;
+
     Thread workerThread;
     byte[] readBuffer;
     int readBufferPosition;
     int counter;
     volatile boolean stopWorker;
 
-    TextView myLabel;
+    // Buttons and fields
+    ToggleButton btn_connect;
+    TextView my_label;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // Assign buttons and toolbar
+
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
+        btn_connect = findViewById(R.id.btn_connect);
+        my_label = findViewById(R.id.my_label);
+
+        if (!findBT()) {
+            // BL does not exist - disable Connect button
+            btn_connect.setEnabled(false);
+
+            Toast.makeText(this, "Bluetooth not present", Toast.LENGTH_SHORT).show();
+        }
+        else
+        {
+            my_label.setText("Bluetooth adapter available");
+        }
+
+//        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+//        fab.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
+//                        .setAction("Action", null).show();
+//            }
+//        });
     }
+
+
+
+    
+
+
+
+
+    // ---------------- Bluetooth functions -----------------------------------------
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -75,14 +103,16 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    void findBT()
-    {
+    boolean findBT() {
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        if(mBluetoothAdapter == null)
-        {
-            myLabel.setText("No bluetooth adapter available");
+        if (mBluetoothAdapter == null) {
+            my_label.setText("No bluetooth adapter available");
+            return false;
         }
+        return true;
+    }
 
+    void ScanBT() {
         if(!mBluetoothAdapter.isEnabled())
         {
             Intent enableBluetooth = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
@@ -101,7 +131,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         }
-        myLabel.setText("Bluetooth Device Found");
+        my_label.setText("Bluetooth Device Found");
     }
 
     void openBT() throws IOException
@@ -114,7 +144,7 @@ public class MainActivity extends AppCompatActivity {
 
         beginListenForData();
 
-        myLabel.setText("Bluetooth Opened");
+        my_label.setText("Bluetooth Opened");
     }
 
     void beginListenForData()
@@ -152,7 +182,7 @@ public class MainActivity extends AppCompatActivity {
                                     {
                                         public void run()
                                         {
-                                            myLabel.setText(data);
+                                            my_label.setText(data);
                                         }
                                     });
                                 }
@@ -180,7 +210,7 @@ public class MainActivity extends AppCompatActivity {
         String msg = "test";
         msg += "\n";
         mmOutputStream.write(msg.getBytes());
-        myLabel.setText("Data Sent");
+        my_label.setText("Data Sent");
     }
 
     void closeBT() throws IOException
@@ -189,7 +219,7 @@ public class MainActivity extends AppCompatActivity {
         mmOutputStream.close();
         mmInputStream.close();
         mmSocket.close();
-        myLabel.setText("Bluetooth Closed");
+        my_label.setText("Bluetooth Closed");
     }
 
 
