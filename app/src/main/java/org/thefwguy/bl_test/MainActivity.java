@@ -11,6 +11,7 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.CompoundButton;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
@@ -33,6 +34,14 @@ public class MainActivity extends AppCompatActivity {
     int readBufferPosition;
     int counter;
     volatile boolean stopWorker;
+    // Device to pair
+    String bluetooth_Name = "NiRis";
+
+    // connectionState represent the status of the Bluetooth connection
+    // 0 -> disconnected
+    // 1 -> scan
+    // 2 -> connect
+    byte connectionState = 0;
 
     // Buttons and fields
     ToggleButton btn_connect;
@@ -62,6 +71,27 @@ public class MainActivity extends AppCompatActivity {
             my_label.setText("Bluetooth adapter available");
         }
 
+        btn_connect.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) {
+                    if (connectionState == 0) {
+                        scanBT();
+                    }
+                    // The toggle is enabled
+                } else {
+                    if (connectionState == 2) {
+                        try {
+                            closeBT();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    // The toggle is disabled
+                }
+            }
+        });
+
+
 //        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
 //        fab.setOnClickListener(new View.OnClickListener() {
 //            @Override
@@ -74,7 +104,8 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-    
+
+
 
 
 
@@ -112,7 +143,7 @@ public class MainActivity extends AppCompatActivity {
         return true;
     }
 
-    void ScanBT() {
+    void scanBT() {
         if(!mBluetoothAdapter.isEnabled())
         {
             Intent enableBluetooth = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
@@ -124,14 +155,15 @@ public class MainActivity extends AppCompatActivity {
         {
             for(BluetoothDevice device : pairedDevices)
             {
-                if(device.getName().equals("Niris"))
+                if(device.getName().equals(bluetooth_Name))
                 {
                     mmDevice = device;
-                    break;
+                    my_label.setText("Bluetooth Device Found");
+                    return;
                 }
             }
         }
-        my_label.setText("Bluetooth Device Found");
+        my_label.setText("Bluetooth Device NOT Found");
     }
 
     void openBT() throws IOException
