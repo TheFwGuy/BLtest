@@ -56,7 +56,7 @@
                     android:layout_height="match_parent">
 
                     <Button
-                        android:id="@+id/button1"
+                        android:id="@+id/btn_up"
                         style="@android:style/Widget.Button.Inset"
                         android:layout_width="80dp"
                         android:layout_height="match_parent"
@@ -65,7 +65,7 @@
                         tools:layout_editor_absoluteY="145dp" />
 
                     <Button
-                        android:id="@+id/button2"
+                        android:id="@+id/btn_down"
                         style="@android:style/Widget.Button.Inset"
                         android:layout_width="80dp"
                         android:layout_height="wrap_content"
@@ -80,14 +80,14 @@
                     android:layout_height="match_parent">
 
                     <Button
-                        android:id="@+id/button3"
+                        android:id="@+id/btn_left"
                         style="@android:style/Widget.Button.Inset"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/btn_left" />
 
                     <Button
-                        android:id="@+id/button4"
+                        android:id="@+id/btn_right"
                         style="@android:style/Widget.Button.Inset"
                         android:layout_width="80dp"
                         android:layout_height="wrap_content"
@@ -99,7 +99,7 @@
                     android:layout_height="match_parent">
 
                     <Button
-                        android:id="@+id/button6"
+                        android:id="@+id/btn_select"
                         style="@android:style/Widget.Button.Inset"
                         android:layout_height="wrap_content"
                         android:text="@string/btn_select"
@@ -126,7 +126,7 @@
                 tools:layout_editor_absoluteY="310dp" />
 
             <Button
-                android:id="@+id/button5"
+                android:id="@+id/btn_send"
                 style="@android:style/Widget.Button.Inset"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
