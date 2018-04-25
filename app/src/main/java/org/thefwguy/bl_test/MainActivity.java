@@ -8,11 +8,13 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CompoundButton;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
@@ -24,6 +26,8 @@ import java.util.Set;
 import java.util.UUID;
 
 public class MainActivity extends AppCompatActivity {
+    private static final String TAG = "TFG MainActivity";
+
     BluetoothAdapter mBluetoothAdapter;
     BluetoothSocket mmSocket;
     BluetoothDevice mmDevice;
@@ -48,6 +52,7 @@ public class MainActivity extends AppCompatActivity {
     ToggleButton btn_connect;
     Button btn_send;
     TextView my_label;
+    EditText messageId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,9 +67,16 @@ public class MainActivity extends AppCompatActivity {
         btn_connect = findViewById(R.id.btn_connect);
         btn_send = findViewById(R.id.btn_send);
         my_label = findViewById(R.id.my_label);
+        messageId = findViewById(R.id.messageId);
+
+        // By default disable the Send button
+        // Will eb enabled ONLY when connected to a device
+        btn_send.setEnabled(false);
+
 
         if (!findBT()) {
-            // BL does not exist - disable Connect button
+            // BL does not exist - disable Connect and Send buttons
+            my_label.setText("Bluetooth not present");
             btn_connect.setEnabled(false);
 
             Toast.makeText(this, "Bluetooth not present", Toast.LENGTH_SHORT).show();
@@ -74,37 +86,29 @@ public class MainActivity extends AppCompatActivity {
             my_label.setText("Bluetooth adapter available");
         }
 
-        btn_send.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                // Send the message viw Bluetooth
-                if (connectionState == 2)
-                {
-                    // Code here executes on main thread after user presses button
-                    try {
-                        sendData("Message test");
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        });
-
         btn_connect.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if (isChecked) {
+                    // The toggle is enabled
                     if (connectionState == 0) {
                         if (searchSlaveBT() == true) {
+                            my_label.setText("Bluetooth Device Found");
                             connectionState = 1;
                             try {
                                 openBT();
                                 connectionState = 2;
+                                // Enable the Send button
+                                btn_send.setEnabled(true);
+
                             } catch (IOException e) {
                                 e.printStackTrace();
                             }
+                        } else {
+                            my_label.setText("Bluetooth Device NOT Found");
                         }
                     }
-                    // The toggle is enabled
                 } else {
+                    // The toggle is disabled
                     if (connectionState == 2) {
                         try {
                             closeBT();
@@ -112,11 +116,22 @@ public class MainActivity extends AppCompatActivity {
                             e.printStackTrace();
                         }
                     }
-                    // The toggle is disabled
                 }
             }
         });
 
+        btn_send.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                // Send the message via Bluetooth if connected - the button is disable UNLESS
+                // a Bluetooth connection exists - no need to further check.
+                try {
+                     String msg = messageId.getText().toString();
+                     sendDataBT(msg);
+                } catch (IOException e) {
+                     e.printStackTrace();
+                }
+            }
+        });
 
 //        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
 //        fab.setOnClickListener(new View.OnClickListener() {
@@ -127,16 +142,6 @@ public class MainActivity extends AppCompatActivity {
 //            }
 //        });
     }
-
-
-
-
-
-
-
-
-
-    // ---------------- Bluetooth functions -----------------------------------------
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -160,16 +165,19 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    // ---------------- Bluetooth functions -----------------------------------------
+
     boolean findBT() {
+        Log.d(TAG, "findBT");
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         if (mBluetoothAdapter == null) {
-            my_label.setText("No bluetooth adapter available");
             return false;
         }
         return true;
     }
 
     boolean searchSlaveBT() {
+        Log.d(TAG, "searchSlaveBT");
         if(!mBluetoothAdapter.isEnabled())
         {
             Intent enableBluetooth = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
@@ -184,22 +192,20 @@ public class MainActivity extends AppCompatActivity {
                 if(device.getName().equals(bluetooth_device))
                 {
                     mmDevice = device;
-                    my_label.setText("Bluetooth Device Found");
                     return true;
                 }
             }
         }
-        my_label.setText("Bluetooth Device NOT Found");
         return false;
     }
 
     void openBT() throws IOException
     {
-        my_label.setText("Open Bluetooth");
+        Log.d(TAG, "openBT");
 
         UUID uuid = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB"); //Standard SerialPortService ID
         mmSocket = mmDevice.createRfcommSocketToServiceRecord(uuid);
-        mmSocket.connect();
+        mmSocket.connect();     // Waiting here ?
         mmOutputStream = mmSocket.getOutputStream();
         mmInputStream = mmSocket.getInputStream();
 
@@ -210,12 +216,14 @@ public class MainActivity extends AppCompatActivity {
 
     void beginListenForData()
     {
+        Log.d(TAG, "beginListenForData");
         final Handler handler = new Handler();
         final byte delimiter = 10; //This is the ASCII code for a newline character
 
         stopWorker = false;
         readBufferPosition = 0;
         readBuffer = new byte[1024];
+
         workerThread = new Thread(new Runnable()
         {
             public void run()
@@ -265,9 +273,9 @@ public class MainActivity extends AppCompatActivity {
         workerThread.start();
     }
 
-    void sendData(String msg) throws IOException
+    void sendDataBT(String msg) throws IOException
     {
-//        String msg = messageId.getText().toString();
+        Log.d(TAG, "sendDataBT");
         msg += "\n";
         mmOutputStream.write(msg.getBytes());
         my_label.setText("Data Sent");
