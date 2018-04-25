@@ -11,6 +11,7 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -35,7 +36,7 @@ public class MainActivity extends AppCompatActivity {
     int counter;
     volatile boolean stopWorker;
     // Device to pair
-    String bluetooth_Name = "NiRis";
+    String bluetooth_device = "NiRis";
 
     // connectionState represent the status of the Bluetooth connection
     // 0 -> disconnected
@@ -45,6 +46,7 @@ public class MainActivity extends AppCompatActivity {
 
     // Buttons and fields
     ToggleButton btn_connect;
+    Button btn_send;
     TextView my_label;
 
     @Override
@@ -58,6 +60,7 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
         btn_connect = findViewById(R.id.btn_connect);
+        btn_send = findViewById(R.id.btn_send);
         my_label = findViewById(R.id.my_label);
 
         if (!findBT()) {
@@ -71,11 +74,34 @@ public class MainActivity extends AppCompatActivity {
             my_label.setText("Bluetooth adapter available");
         }
 
+        btn_send.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                // Send the message viw Bluetooth
+                if (connectionState == 2)
+                {
+                    // Code here executes on main thread after user presses button
+                    try {
+                        sendData("Message test");
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        });
+
         btn_connect.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if (isChecked) {
                     if (connectionState == 0) {
-                        scanBT();
+                        if (searchSlaveBT() == true) {
+                            connectionState = 1;
+                            try {
+                                openBT();
+                                connectionState = 2;
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
                     }
                     // The toggle is enabled
                 } else {
@@ -143,7 +169,7 @@ public class MainActivity extends AppCompatActivity {
         return true;
     }
 
-    void scanBT() {
+    boolean searchSlaveBT() {
         if(!mBluetoothAdapter.isEnabled())
         {
             Intent enableBluetooth = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
@@ -155,19 +181,22 @@ public class MainActivity extends AppCompatActivity {
         {
             for(BluetoothDevice device : pairedDevices)
             {
-                if(device.getName().equals(bluetooth_Name))
+                if(device.getName().equals(bluetooth_device))
                 {
                     mmDevice = device;
                     my_label.setText("Bluetooth Device Found");
-                    return;
+                    return true;
                 }
             }
         }
         my_label.setText("Bluetooth Device NOT Found");
+        return false;
     }
 
     void openBT() throws IOException
     {
+        my_label.setText("Open Bluetooth");
+
         UUID uuid = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB"); //Standard SerialPortService ID
         mmSocket = mmDevice.createRfcommSocketToServiceRecord(uuid);
         mmSocket.connect();
@@ -236,10 +265,9 @@ public class MainActivity extends AppCompatActivity {
         workerThread.start();
     }
 
-    void sendData() throws IOException
+    void sendData(String msg) throws IOException
     {
 //        String msg = messageId.getText().toString();
-        String msg = "test";
         msg += "\n";
         mmOutputStream.write(msg.getBytes());
         my_label.setText("Data Sent");
