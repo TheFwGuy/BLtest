@@ -40,7 +40,7 @@ public class MainActivity extends AppCompatActivity {
     int counter;
     volatile boolean stopWorker;
     // Device to pair
-    String bluetooth_device = "NiRis";
+    String bluetooth_device = "BLtest";
 
     // connectionState represent the status of the Bluetooth connection
     // 0 -> disconnected
@@ -203,15 +203,25 @@ public class MainActivity extends AppCompatActivity {
     {
         Log.d(TAG, "openBT");
 
+        my_label.setText("Bluetooth Waiting connection");
+
         UUID uuid = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB"); //Standard SerialPortService ID
-        mmSocket = mmDevice.createRfcommSocketToServiceRecord(uuid);
-        mmSocket.connect();     // Waiting here ?
+
+        try {
+            mmSocket = mmDevice.createInsecureRfcommSocketToServiceRecord(uuid);
+            mmSocket.connect();     // Waiting here ?
+        } catch (IOException e) {
+            my_label.setText (e.getMessage());
+        }
+
+        mBluetoothAdapter.cancelDiscovery();
+
         mmOutputStream = mmSocket.getOutputStream();
         mmInputStream = mmSocket.getInputStream();
 
-        beginListenForData();
-
         my_label.setText("Bluetooth Opened");
+
+        beginListenForData();
     }
 
     void beginListenForData()
