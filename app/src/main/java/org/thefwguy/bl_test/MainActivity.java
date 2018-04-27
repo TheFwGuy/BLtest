@@ -29,10 +29,10 @@ public class MainActivity extends AppCompatActivity {
     private static final String TAG = "TFG MainActivity";
 
     BluetoothAdapter mBluetoothAdapter;
-    BluetoothSocket mmSocket;
-    BluetoothDevice mmDevice;
-    OutputStream mmOutputStream;
-    InputStream mmInputStream;
+    BluetoothSocket mmSocket = null;
+    BluetoothDevice mmDevice = null;
+    OutputStream mmOutputStream = null;
+    InputStream mmInputStream = null;
 
     Thread workerThread;
     byte[] readBuffer;
@@ -109,13 +109,14 @@ public class MainActivity extends AppCompatActivity {
                     }
                 } else {
                     // The toggle is disabled
-                    if (connectionState == 2) {
+//                    if (connectionState == 2) {
                         try {
                             closeBT();
+                            connectionState = 0;
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
-                    }
+  //                  }
                 }
             }
         });
@@ -209,12 +210,20 @@ public class MainActivity extends AppCompatActivity {
 
         try {
             mmSocket = mmDevice.createInsecureRfcommSocketToServiceRecord(uuid);
-            mmSocket.connect();     // Waiting here ?
         } catch (IOException e) {
-            my_label.setText (e.getMessage());
+            Log.d(TAG, "createInsecureRfcomm - " + e.getMessage());
         }
 
         mBluetoothAdapter.cancelDiscovery();
+
+        try {
+            mmSocket.connect();     // Waiting here ?
+        } catch (IOException e) {
+            Log.d(TAG, "connect - " + e.getMessage());
+            e.printStackTrace();
+            my_label.setText("Bluetooth abort connection");
+            return;
+        }
 
         mmOutputStream = mmSocket.getOutputStream();
         mmInputStream = mmSocket.getInputStream();
@@ -293,10 +302,11 @@ public class MainActivity extends AppCompatActivity {
 
     void closeBT() throws IOException
     {
+        Log.d(TAG, "closeBT");
         stopWorker = true;
-        mmOutputStream.close();
-        mmInputStream.close();
-        mmSocket.close();
+        if (mmOutputStream != null) mmOutputStream.close();
+        if (mmInputStream != null) mmInputStream.close();
+        if (mmSocket != null) mmSocket.close();
         my_label.setText("Bluetooth Closed");
     }
 
