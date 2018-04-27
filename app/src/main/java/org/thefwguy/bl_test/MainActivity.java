@@ -4,9 +4,11 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.preference.PreferenceManager;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
@@ -52,6 +54,7 @@ public class MainActivity extends AppCompatActivity {
     ToggleButton btn_connect;
     Button btn_send;
     TextView my_label;
+    TextView idValue;
     EditText messageId;
 
     @Override
@@ -67,6 +70,7 @@ public class MainActivity extends AppCompatActivity {
         btn_connect = findViewById(R.id.btn_connect);
         btn_send = findViewById(R.id.btn_send);
         my_label = findViewById(R.id.my_label);
+        idValue = findViewById(R.id.IdValue);
         messageId = findViewById(R.id.messageId);
 
         // By default disable the Send button
@@ -142,6 +146,13 @@ public class MainActivity extends AppCompatActivity {
 //                        .setAction("Action", null).show();
 //            }
 //        });
+        PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
+
+        SharedPreferences sharedPref =
+                PreferenceManager.getDefaultSharedPreferences(this);
+
+        String deviceName = sharedPref.getString ("KEY_PREF_DEVICE_NAME", "No setting");
+        idValue.setText(deviceName);
     }
 
     @Override
@@ -160,6 +171,8 @@ public class MainActivity extends AppCompatActivity {
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
+            Intent intent = new Intent(this, SettingsActivity.class);
+            startActivity(intent);
             return true;
         }
 
