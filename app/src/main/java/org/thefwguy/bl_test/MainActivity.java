@@ -151,8 +151,8 @@ public class MainActivity extends AppCompatActivity {
         SharedPreferences sharedPref =
                 PreferenceManager.getDefaultSharedPreferences(this);
 
-        String deviceName = sharedPref.getString ("KEY_PREF_DEVICE_NAME", "No setting");
-        idValue.setText(deviceName);
+        bluetooth_device = sharedPref.getString (SettingsActivity.KEY_PREF_DEVICE_NAME, "No setting");
+        idValue.setText(bluetooth_device);
     }
 
     @Override

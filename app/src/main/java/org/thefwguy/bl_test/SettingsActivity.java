@@ -5,7 +5,7 @@ import android.os.Bundle;
 
 public class SettingsActivity extends AppCompatActivity {
     public static final String
-            KEY_PREF_DEVICE_NAME = "BLTest";
+            KEY_PREF_DEVICE_NAME = "device_name";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
