@@ -24,6 +24,7 @@ import android.widget.ToggleButton;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.Method;
 import java.util.Set;
 import java.util.UUID;
 
@@ -42,7 +43,8 @@ public class MainActivity extends AppCompatActivity {
     int counter;
     volatile boolean stopWorker;
     // Device to pair
-    String bluetooth_device = "BLtest";
+    String bluetooth_device = "BLtest";     // String updated from settings
+    UUID uuid = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB"); //Standard SerialPortService ID
 
     // connectionState represent the status of the Bluetooth connection
     // 0 -> disconnected
@@ -99,11 +101,15 @@ public class MainActivity extends AppCompatActivity {
                             my_label.setText("Bluetooth Device Found");
                             connectionState = 1;
                             try {
-                                openBT();
-                                connectionState = 2;
-                                // Enable the Send button
-                                btn_send.setEnabled(true);
-
+                                if (openBT() ) {
+                                    connectionState = 2;
+                                    // Enable the Send button
+                                    btn_send.setEnabled(true);
+                                } else {
+                                    discoverBT();
+                                    btn_connect.setTextOff("Abort");
+                                    btn_connect.toggle();
+                                }
                             } catch (IOException e) {
                                 e.printStackTrace();
                             }
@@ -116,6 +122,9 @@ public class MainActivity extends AppCompatActivity {
 //                    if (connectionState == 2) {
                         try {
                             closeBT();
+                            // Disable the Send button
+                            btn_send.setEnabled(false);
+
                             connectionState = 0;
                         } catch (IOException e) {
                             e.printStackTrace();
@@ -127,7 +136,7 @@ public class MainActivity extends AppCompatActivity {
 
         btn_send.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                // Send the message via Bluetooth if connected - the button is disable UNLESS
+                // Send the message via Bluetooth if connected - the button is disabled UNLESS
                 // a Bluetooth connection exists - no need to further check.
                 try {
                      String msg = messageId.getText().toString();
@@ -190,6 +199,23 @@ public class MainActivity extends AppCompatActivity {
         return true;
     }
 
+    boolean discoverBT() {
+        mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+
+        if (mBluetoothAdapter.startDiscovery()) {
+
+            //If discovery has started, then display the following toast....//
+            Toast.makeText(getApplicationContext(), "Discovering other bluetooth devices...",
+                    Toast.LENGTH_SHORT).show();
+        } else {
+
+            //If discovery hasn’t started, then display this alternative toast//
+            Toast.makeText(getApplicationContext(), "Something went wrong! Discovery has failed to start.",
+                    Toast.LENGTH_SHORT).show();
+        }
+        return true;
+    }
+
     boolean searchSlaveBT() {
         Log.d(TAG, "searchSlaveBT");
         if(!mBluetoothAdapter.isEnabled())
@@ -213,19 +239,33 @@ public class MainActivity extends AppCompatActivity {
         return false;
     }
 
-    void openBT() throws IOException
+    private BluetoothSocket createBluetoothSocket(BluetoothDevice device) throws IOException {
+        try {
+            final Method  m = device.getClass().getMethod("createInsecureRfcommSocketToServiceRecord", new Class[] { UUID.class });
+            return (BluetoothSocket) m.invoke(device, uuid);
+        } catch (Exception e) {
+            Log.e(TAG, "Could not create Insecure RFComm Connection",e);
+            return  device.createRfcommSocketToServiceRecord(uuid);
+        }
+    }
+
+    boolean openBT() throws IOException
     {
         Log.d(TAG, "openBT");
 
         my_label.setText("Bluetooth Waiting connection");
 
-        UUID uuid = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB"); //Standard SerialPortService ID
-
         try {
-            mmSocket = mmDevice.createInsecureRfcommSocketToServiceRecord(uuid);
-        } catch (IOException e) {
-            Log.d(TAG, "createInsecureRfcomm - " + e.getMessage());
+            mmSocket = createBluetoothSocket(mmDevice);
+        } catch (IOException e1) {
+
         }
+
+//        try {
+//            mmSocket = mmDevice.createInsecureRfcommSocketToServiceRecord(uuid);
+//        } catch (IOException e) {
+//            Log.d(TAG, "createInsecureRfcomm - " + e.getMessage());
+//        }
 
         mBluetoothAdapter.cancelDiscovery();
 
@@ -235,7 +275,7 @@ public class MainActivity extends AppCompatActivity {
             Log.d(TAG, "connect - " + e.getMessage());
             e.printStackTrace();
             my_label.setText("Bluetooth abort connection");
-            return;
+            return false;
         }
 
         mmOutputStream = mmSocket.getOutputStream();
@@ -244,6 +284,7 @@ public class MainActivity extends AppCompatActivity {
         my_label.setText("Bluetooth Opened");
 
         beginListenForData();
+        return true;
     }
 
     void beginListenForData()
