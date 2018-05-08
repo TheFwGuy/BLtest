@@ -8,8 +8,8 @@
     <string name="btn_right">Right</string>
     <string name="btn_send">Send</string>
     <string name="btn_connect">Connect</string>
-    <string name="btn_connect_on">  Connected  </string>
-    <string name="btn_connect_off">Disconnected</string>
+    <string name="btn_connect_on" >Disconnect</string>
+    <string name="btn_connect_off">  Connect  </string>
     <string name="message_field">Message</string>
     <string name="message_field1">Info</string>
     <string name="label_author">TheFwGuy (c)</string>
