@@ -185,4 +185,11 @@ public class MainActivity extends AppCompatActivity {
 
         return  super.onOptionsItemSelected(item);
     }
+
+    public void onLostConnection() {
+        // Method to handle the lost connection.
+        // Is called from the bluetooth module
+
+
+    }
 }

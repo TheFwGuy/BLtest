@@ -38,7 +38,7 @@ public class BluetoothManager {
     private byte[] readBuffer;
     private int readBufferPosition;
     private int counter;
-    private volatile boolean stopWorker;
+    protected volatile boolean stopWorker = true;
     // Device to pair
     protected String bluetooth_device = "BLtest";     // String updated from settings
     private UUID uuid = UUID.fromString("0000110e-0000-1000-8000-00805f9b34fb"); //Standard SerialPortService ID
@@ -120,18 +120,11 @@ public class BluetoothManager {
         mBluetoothAdapter.cancelDiscovery();
 
         try {
-//            mmSocket = mmDevice.createInsecureRfcommSocketToServiceRecord(uuid);
             mmSocket = createBluetoothSocket(mmDevice);
         } catch (IOException e1) {
             Log.e(TAG, "createBluetoothSocket - " + e1);
             return false;
         }
-
-//        try {
-//            mmSocket = mmDevice.createInsecureRfcommSocketToServiceRecord(uuid);
-//        } catch (IOException e) {
-//            Log.d(TAG, "createInsecureRfcomm - " + e.getMessage());
-//        }
 
         // Debug info
         Log.d(TAG, "Connected ? : " + mmSocket.isConnected());
@@ -148,20 +141,7 @@ public class BluetoothManager {
         } catch (IOException e) {
             Log.e(TAG, "connect - " + e.getMessage());
             e.printStackTrace();
-
-            // Mmm reassign socket ?
-            mmSocket =(BluetoothSocket) mmDevice.getClass().getMethod("createRfcommSocket", new Class[] {int.class}).invoke(mmDevice,1);
-
-            try {
-                if(!mmSocket.isConnected()) {
-                    Log.d(TAG, "Not Connected - force connect");
-                    mmSocket.connect();
-                }
-            } catch (IOException e1) {
-                Log.e(TAG, "connect (again) - " + e1.getMessage());
-                e1.printStackTrace();
-                return false;
-            }
+            return false;
         }
 
         mmOutputStream = mmSocket.getOutputStream();
@@ -190,6 +170,11 @@ public class BluetoothManager {
                 {
                     try
                     {
+                        if(!mmSocket.isConnected()) {
+                            Log.d(TAG, "Detected disconnection !");
+                            stopWorker = true;
+                        }
+
                         int bytesAvailable = mmInputStream.available();
                         if(bytesAvailable > 0)
                         {
@@ -227,6 +212,13 @@ public class BluetoothManager {
                         stopWorker = true;
                     }
                 }
+
+                Log.d(TAG, "Out from the loop ! Connection lost");
+                try {
+                    closeBT();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         });
 
@@ -252,10 +244,8 @@ public class BluetoothManager {
     // --------  Private functions ---------
 
     private BluetoothSocket createBluetoothSocket(BluetoothDevice device) throws IOException {
-        Log.d(TAG, "createBluetoothSocket for " + uuid);
         try {
-            final Method m = device.getClass().getMethod("createInsecureRfcommSocketToServiceRecord", UUID.class);
-            return (BluetoothSocket) m.invoke(device, uuid);
+            return (BluetoothSocket) device.getClass().getMethod("createRfcommSocket", new Class[] {int.class}).invoke(device,1);
         } catch (Exception e) {
             Log.e(TAG, "Could not create Insecure RFComm Connection",e);
             return  device.createRfcommSocketToServiceRecord(uuid);
