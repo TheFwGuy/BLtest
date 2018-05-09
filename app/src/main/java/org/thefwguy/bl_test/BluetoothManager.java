@@ -1,44 +1,72 @@
 package org.thefwguy.bl_test;
 
+import android.app.Application;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Handler;
+import android.os.ParcelUuid;
+import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 import android.widget.Toast;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Set;
 import java.util.UUID;
 
 public class BluetoothManager {
     private static final String TAG = "TFG BluetoothManager";
 
-    BluetoothAdapter mBluetoothAdapter;
-    BluetoothSocket mmSocket = null;
-    BluetoothDevice mmDevice = null;
-    OutputStream mmOutputStream = null;
-    InputStream mmInputStream = null;
+    Application mApp;
 
-    Thread workerThread;
-    byte[] readBuffer;
-    int readBufferPosition;
-    int counter;
-    volatile boolean stopWorker;
+    private BluetoothAdapter mBluetoothAdapter;
+    private ArrayList<BluetoothDevice> mDevicesList;
+    private BluetoothSocket mmSocket = null;
+    private BluetoothDevice mmDevice = null;
+    private ParcelUuid[] mmDeviceUUIDs = null;
+    private OutputStream mmOutputStream = null;
+    private InputStream mmInputStream = null;
+
+    private Thread workerThread;
+    private byte[] readBuffer;
+    private int readBufferPosition;
+    private int counter;
+    private volatile boolean stopWorker;
     // Device to pair
-    String bluetooth_device = "BLtest";     // String updated from settings
-    UUID uuid = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB"); //Standard SerialPortService ID
+    protected String bluetooth_device = "BLtest";     // String updated from settings
+    private UUID uuid = UUID.fromString("0000110e-0000-1000-8000-00805f9b34fb"); //Standard SerialPortService ID
 
-    boolean findBT() {
-        Log.d(TAG, "findBT");
+    // The function looks if exists a Bluetooth interface on the terminal, if so
+    // open it, assign to the pointer and return true.
+    // After that the main access to Bluetooth will be via mBluetoothAdapter variable
+    // Called on onCreate - thus call this method only once !
+
+    boolean localInitBT() {
+        Log.d(TAG, "localInitBT");
+        mDevicesList = new ArrayList<BluetoothDevice>();        // Init the list
+        // Look here to populate : https://stackoverflow.com/questions/17763779/android-bluetooth-cant-connect
+
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         if (mBluetoothAdapter == null) {
             return false;
         }
+
+        // Check permissions !  On newer Android version is not enough to declare the use
+        // of resources in the manifest but is needed to enable it explicitly
+        if(!mBluetoothAdapter.isEnabled()) {
+            mBluetoothAdapter.enable();
+//            Log.d(TAG, "Request enable Bluetooth (TBD)");
+//            Intent enableBluetooth = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+//            startActivityForResult(enableBluetooth, 0);
+        }
+
         return true;
     }
 
@@ -60,13 +88,9 @@ public class BluetoothManager {
         return true;
     }
 
+    // The function is looking for a specific device
     boolean searchSlaveBT() {
-        Log.d(TAG, "searchSlaveBT");
-        if(!mBluetoothAdapter.isEnabled())
-        {
-            Intent enableBluetooth = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-//            startActivityForResult(enableBluetooth, 0);
-        }
+        Log.d(TAG, "searchSlaveBT - looking for " + bluetooth_device);
 
         Set<BluetoothDevice> pairedDevices = mBluetoothAdapter.getBondedDevices();
         if(pairedDevices.size() > 0)
@@ -76,6 +100,12 @@ public class BluetoothManager {
                 if(device.getName().equals(bluetooth_device))
                 {
                     mmDevice = device;
+                    if (mmDevice.fetchUuidsWithSdp()) {
+                        mmDeviceUUIDs = mmDevice.getUuids();
+                    }
+                    Log.d(TAG, "searchSlaveBT - found " + bluetooth_device + " - uses UUID " + mmDeviceUUIDs[0].toString());
+                    // Overwrite default UUID
+                    uuid = UUID.fromString(mmDeviceUUIDs[0].toString());
                     return true;
                 }
             }
@@ -83,23 +113,14 @@ public class BluetoothManager {
         return false;
     }
 
-    private BluetoothSocket createBluetoothSocket(BluetoothDevice device) throws IOException {
-        try {
-            final Method m = device.getClass().getMethod("createInsecureRfcommSocketToServiceRecord", new Class[] { UUID.class });
-            return (BluetoothSocket) m.invoke(device, uuid);
-        } catch (Exception e) {
-            Log.e(TAG, "Could not create Insecure RFComm Connection",e);
-            return  device.createRfcommSocketToServiceRecord(uuid);
-        }
-    }
-
-    boolean openBT() throws IOException
-    {
+    boolean openBT() throws IOException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
         Log.d(TAG, "openBT");
 
-//        my_label.setText("Bluetooth Waiting connection");
+        Log.d(TAG, "cancel discovery");
+        mBluetoothAdapter.cancelDiscovery();
 
         try {
+//            mmSocket = mmDevice.createInsecureRfcommSocketToServiceRecord(uuid);
             mmSocket = createBluetoothSocket(mmDevice);
         } catch (IOException e1) {
             Log.e(TAG, "createBluetoothSocket - " + e1);
@@ -112,14 +133,35 @@ public class BluetoothManager {
 //            Log.d(TAG, "createInsecureRfcomm - " + e.getMessage());
 //        }
 
-        mBluetoothAdapter.cancelDiscovery();
+        // Debug info
+        Log.d(TAG, "Connected ? : " + mmSocket.isConnected());
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            Log.d(TAG, "Connection type ? : " + mmSocket.getConnectionType());
+        }
+        // Debug info
 
         try {
-            mmSocket.connect();     // Waiting here ?
+            if(!mmSocket.isConnected()) {
+                Log.d(TAG, "Not Connected - force connect");
+                mmSocket.connect();
+            }
         } catch (IOException e) {
             Log.e(TAG, "connect - " + e.getMessage());
             e.printStackTrace();
-            return false;
+
+            // Mmm reassign socket ?
+            mmSocket =(BluetoothSocket) mmDevice.getClass().getMethod("createRfcommSocket", new Class[] {int.class}).invoke(mmDevice,1);
+
+            try {
+                if(!mmSocket.isConnected()) {
+                    Log.d(TAG, "Not Connected - force connect");
+                    mmSocket.connect();
+                }
+            } catch (IOException e1) {
+                Log.e(TAG, "connect (again) - " + e1.getMessage());
+                e1.printStackTrace();
+                return false;
+            }
         }
 
         mmOutputStream = mmSocket.getOutputStream();
@@ -205,5 +247,18 @@ public class BluetoothManager {
         if (mmOutputStream != null) mmOutputStream.close();
         if (mmInputStream != null) mmInputStream.close();
         if (mmSocket != null) mmSocket.close();
+    }
+
+    // --------  Private functions ---------
+
+    private BluetoothSocket createBluetoothSocket(BluetoothDevice device) throws IOException {
+        Log.d(TAG, "createBluetoothSocket for " + uuid);
+        try {
+            final Method m = device.getClass().getMethod("createInsecureRfcommSocketToServiceRecord", UUID.class);
+            return (BluetoothSocket) m.invoke(device, uuid);
+        } catch (Exception e) {
+            Log.e(TAG, "Could not create Insecure RFComm Connection",e);
+            return  device.createRfcommSocketToServiceRecord(uuid);
+        }
     }
 }

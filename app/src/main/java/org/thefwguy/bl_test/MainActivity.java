@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.preference.PreferenceManager;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -17,6 +18,9 @@ import android.widget.Toast;
 import android.widget.ToggleButton;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+
+import static android.support.v4.app.ActivityCompat.startActivityForResult;
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "TFG MainActivity";
@@ -38,6 +42,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        Log.d(TAG, "onCreate");
         super.onCreate(savedInstanceState);
 
         // Assign buttons and toolbar
@@ -56,7 +61,7 @@ public class MainActivity extends AppCompatActivity {
         // Will eb enabled ONLY when connected to a device
         btn_send.setEnabled(false);
 
-        if (!bManager.findBT()) {
+        if (!bManager.localInitBT()) {
             // BL does not exist - disable Connect and Send buttons
             my_label.setText("Bluetooth not present");
             btn_connect.setEnabled(false);
@@ -70,6 +75,8 @@ public class MainActivity extends AppCompatActivity {
 
         btn_connect.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                Log.d(TAG, "btn_connect hit");
+
                 if (isChecked) {
                     // The toggle is enabled
                     if (connectionState == 0) {
@@ -94,6 +101,12 @@ public class MainActivity extends AppCompatActivity {
                                     my_label.setText("Bluetooth connection failed");
                                 }
                             } catch (IOException e) {
+                                e.printStackTrace();
+                            } catch (NoSuchMethodException e) {
+                                e.printStackTrace();
+                            } catch (IllegalAccessException e) {
+                                e.printStackTrace();
+                            } catch (InvocationTargetException e) {
                                 e.printStackTrace();
                             }
                         } else {
@@ -120,6 +133,7 @@ public class MainActivity extends AppCompatActivity {
 
         btn_send.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
+                Log.d(TAG, "btn_send hit");
                 // Send the message via Bluetooth if connected - the button is disabled UNLESS
                 // a Bluetooth connection exists - no need to further check.
                 try {
