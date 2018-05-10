@@ -111,6 +111,9 @@ public class MainActivity extends AppCompatActivity {
                             }
                         } else {
                             my_label.setText("Bluetooth Device NOT Found");
+                            btn_connect.setTextOff("Connect");
+                            btn_connect.toggle();
+                            connectionState=0;
                         }
                     }
                 } else {
@@ -145,14 +148,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-//        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-//        fab.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View view) {
-//                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-//                        .setAction("Action", null).show();
-//            }
-//        });
         PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
 
         SharedPreferences sharedPref =
