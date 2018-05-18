@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.graphics.LightingColorFilter;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.preference.PreferenceManager;
@@ -43,6 +44,9 @@ public class MainActivity extends AppCompatActivity {
     TextView idValue;
     EditText messageId;
 
+    static Button btn_up;
+    static Button btn_down;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Log.d(TAG, "onCreate");
@@ -59,6 +63,9 @@ public class MainActivity extends AppCompatActivity {
         my_label = findViewById(R.id.my_label);
         idValue = findViewById(R.id.IdValue);
         messageId = findViewById(R.id.messageId);
+
+        btn_up = findViewById(R.id.btn_up);
+        btn_down = findViewById(R.id.btn_down);
 
         // By default disable the Send button
         // Will eb enabled ONLY when connected to a device
@@ -196,9 +203,16 @@ public class MainActivity extends AppCompatActivity {
         // Reset the toogle button
         my_label.setText("Bluetooth Device lost - disconnected");
         btn_connect.setTextOff("Connect");
-        btn_connect.toggle();
+        btn_connect.setChecked(false);
         connectionState=0;
+    }
 
+    public static void handleUpButtonRx() {
+        btn_up.getBackground().setColorFilter(new LightingColorFilter(0xFFFFFFFF, 0xFFAA0000));
+    }
+
+    public static void handleDownButtonRx() {
+        btn_down.getBackground().setColorFilter(new LightingColorFilter(0xFFFFFFFF, 0xFFAA0000));
     }
 
     //The BroadcastReceiver that listens for bluetooth broadcasts

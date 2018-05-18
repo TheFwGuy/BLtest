@@ -195,6 +195,7 @@ public class BluetoothManager {
                                             // TBD - save received messages in an array and assign the array to a view
 //                                            my_label.setText(data);
                                             Log.d(TAG, "Received data : " + data.toString());
+                                            MainActivity.handleUpButtonRx();
                                         }
                                     });
                                 }
