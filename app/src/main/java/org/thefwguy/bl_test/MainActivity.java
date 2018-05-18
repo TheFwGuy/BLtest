@@ -1,6 +1,11 @@
 package org.thefwguy.bl_test;
 
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -19,8 +24,6 @@ import android.widget.ToggleButton;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-
-import static android.support.v4.app.ActivityCompat.startActivityForResult;
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "TFG MainActivity";
@@ -71,6 +74,12 @@ public class MainActivity extends AppCompatActivity {
         else
         {
             my_label.setText("Bluetooth adapter available");
+
+            IntentFilter filter = new IntentFilter();
+            filter.addAction(BluetoothDevice.ACTION_ACL_CONNECTED);
+            filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED);
+            filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
+            this.registerReceiver(mReceiver, filter);
         }
 
         btn_connect.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -184,7 +193,50 @@ public class MainActivity extends AppCompatActivity {
     public void onLostConnection() {
         // Method to handle the lost connection.
         // Is called from the bluetooth module
-
+        // Reset the toogle button
+        my_label.setText("Bluetooth Device lost - disconnected");
+        btn_connect.setTextOff("Connect");
+        btn_connect.toggle();
+        connectionState=0;
 
     }
+
+    //The BroadcastReceiver that listens for bluetooth broadcasts
+    protected final BroadcastReceiver mReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+
+            if (BluetoothDevice.ACTION_FOUND.equals(action)) {
+                Log.d(TAG, "BT ACTION_FOUND event received");
+                //Device found
+            }
+            else if (BluetoothDevice.ACTION_ACL_CONNECTED.equals(action)) {
+                //Device is now connected
+                Log.d(TAG, "BT ACTION_ACL_CONNECTED event received");
+//                beginListenForData();
+            }
+            else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
+                Log.d(TAG, "BT ACTION_DISCOVERY_FINISHED event received");
+                //Done searching
+            }
+            else if (BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED.equals(action)) {
+                Log.d(TAG, "BT ACTION_ACL_DISCONNECT_REQUEST event received");
+                //Device is about to disconnect
+            }
+            else if (BluetoothDevice.ACTION_ACL_DISCONNECTED.equals(action)) {
+                Log.d(TAG, "BT ACTION_ACL_DISCONNECTED event received");
+                //Device has disconnected
+                try {
+                    bManager.closeBT();
+                    onLostConnection();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+            }
+        }
+    };
+
 }
